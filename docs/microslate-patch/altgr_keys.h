@@ -28,6 +28,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>  // NULL
 
 #include "config.h"  // MOD_ALT_RIGHT, isShift()
 

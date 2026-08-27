@@ -103,6 +103,7 @@ def main():
     w("")
     w("#include <stdint.h>")
     w("#include <stdbool.h>")
+    w("#include <stddef.h>  // NULL")
     w("")
     w('#include "config.h"  // MOD_ALT_RIGHT, isShift()')
     w("")

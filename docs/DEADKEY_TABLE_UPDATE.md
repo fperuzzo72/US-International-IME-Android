@@ -16,6 +16,11 @@ byte-identical in all five:
 
 Everything below applies to all five unchanged.
 
+**Status: applied to all five on 2026-08-27**, along with the AltGr wiring at
+every call site (eleven of them across the five). None of it has been compiled
+as firmware or tested on hardware yet. See each project's
+`docs/DEVELOPMENT_LOG.md` for what landed where.
+
 ## Where the reference came from
 
 The specification is `tools/kbdusx.xml` in this repository: a disassembly of
@@ -146,13 +151,15 @@ about them:
 
 ### Scope note
 
-These are writing tools with a fixed font, so there is one thing to check before
-shipping the AltGr layer: whether `EpdFont` actually has glyphs for the symbols.
-The accented Latin letters are almost certainly there already, since the dead
-keys produce them. Characters like ¤ ¶ ‘ ’ þ ð æ ø may not be. A missing glyph
-is a rendering problem, not a table problem, and the table can ship whole while
-the font catches up. Worth a look at the glyph coverage before deciding whether
-to expose all 37 keys or start with the letters.
+These are writing tools with a fixed font, so the open question was whether
+`EpdFont` has glyphs for the symbols, not just for the accented letters the
+dead keys already produce.
+
+It does. Checked against the intervals in `EpdFont/scripts/fontconvert.py`:
+Latin-1 Supplement, General Punctuation and Currency Symbols are all enabled,
+which covers **all 60 characters** of the AltGr layer, ¤ ¶ ‘ ’ þ ð æ ø and the
+euro sign included. Nothing has to wait for the font, and there is no reason to
+ship a subset of the 37 keys.
 
 ## Summary
 
