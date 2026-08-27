@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">US-International IME</string>
+    <string name="ime_name">US-International (physical keyboard)</string>
+    <string name="subtype_name">US-International</string>
+    <string name="input_view_hint">This keyboard is for a physical or Bluetooth keyboard. There is nothing to tap here.</string>
+    <string name="input_view_switch">Switch keyboard</string>
+</resources>

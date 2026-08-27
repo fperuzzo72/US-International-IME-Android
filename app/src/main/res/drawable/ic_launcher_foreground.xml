@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- An acute accent floating over a base stroke: the layout in one mark. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M60,30 L72,30 L62,50 L50,50 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M36,62 L72,62 A5,5 0 0 1 72,72 L36,72 A5,5 0 0 1 36,62 Z" />
+</vector>

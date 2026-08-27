@@ -1,0 +1,57 @@
+--- a/dead_keys.h	2026-08-27 11:10:04
++++ b/dead_keys.h	2026-08-27 11:10:04
+@@ -4,11 +4,11 @@
+ // dead_keys.h — US-International dead key composition for MicroSlate
+ //
+ // Implements the five dead keys of the US-International layout:
+-//   '  (apostrophe)  → acute accent   : a→á  e→é  i→í  o→ó  u→ú  c→ç
++//   '  (apostrophe)  → acute accent   : a→á  e→é  i→í  o→ó  u→ú  y→ý  c→ç
+ //   `  (grave)       → grave accent   : a→à  e→è  i→ì  o→ò  u→ù
+ //   ~  (tilde)       → tilde          : a→ã  o→õ  n→ñ
+ //   ^  (circumflex)  → circumflex     : a→â  e→ê  i→î  o→ô  u→û
+-//   "  (diaeresis)   → umlaut/trema   : a→ä  e→ë  i→ï  o→ö  u→ü
++//   "  (diaeresis)   → umlaut/trema   : a→ä  e→ë  i→ï  o→ö  u→ü  y→ÿ
+ //
+ // Usage:
+ //   const char* result = deadKeyProcess(ch);
+@@ -50,6 +50,8 @@
+     { '\'', 'O', "\xC3\x93" },  // Ó
+     { '\'', 'u', "\xC3\xBA" },  // ú
+     { '\'', 'U', "\xC3\x9A" },  // Ú
++    { '\'', 'y', "\xC3\xBD" },  // ý
++    { '\'', 'Y', "\xC3\x9D" },  // Ý
+     { '\'', 'c', "\xC3\xA7" },  // ç
+     { '\'', 'C', "\xC3\x87" },  // Ç
+     { '\'', ' ', "'"         },  // literal apostrophe
+@@ -100,6 +102,8 @@
+     { '"',  'O', "\xC3\x96" },  // Ö
+     { '"',  'u', "\xC3\xBC" },  // ü
+     { '"',  'U', "\xC3\x9C" },  // Ü
++    { '"',  'y', "\xC3\xBF" },  // ÿ  (no uppercase: the Windows layout
++                                //  has no Ÿ on this dead key)
+     { '"',  ' ', "\""        },  // literal double-quote
+ 
+     { 0, 0, 0 }  // sentinel
+@@ -166,9 +170,20 @@
+             }
+         }
+ 
+-        // No composition found: emit dead key as literal, requeue `ch`
+-        static char flush_buf[2];
++        // No composition found: emit the dead key as a literal.
++        static char flush_buf[3];
+         flush_buf[0] = dead;
++
++        // A second dead key does not stack and does not re-arm: on Windows,
++        // '' is two apostrophes and ''a is ''a, not 'a-acute. Requeuing `ch`
++        // here would store it as a new pending dead key instead.
++        if (deadKeyIsDeadChar(ch)) {
++            flush_buf[1] = ch;
++            flush_buf[2] = '\0';
++            return flush_buf;
++        }
++
++        // Otherwise emit the dead key alone and requeue `ch`.
+         flush_buf[1] = '\0';
+         _dead_requeue_char = ch;
+         return flush_buf;
