@@ -74,13 +74,21 @@ Then:
    first**: CI signs each run with a fresh debug key, so a new APK will not
    install over an older one. Switch to another keyboard before uninstalling,
    so you are never left without an input method.
-2. Enable **US-International (physical keyboard)** in Android's input method
-   settings. The launcher icon takes you straight there.
-3. Select it as the active input method.
-4. Optional but recommended: set the physical keyboard's system layout to plain
-   **English (US)**, not US International. This IME does the composition itself
-   and never reads the system layout, so leaving the broken one selected changes
-   nothing, but a plain US layout keeps the two from looking like they disagree.
+2. Open the app. Turning on a keyboard is the one genuinely awkward part of
+   installing an IME: it lives across two different Android settings surfaces,
+   and the second is a pop-up you cannot deep-link to. The app's only screen
+   walks the three steps in order and ticks off the ones already done.
+
+   - **Turn the keyboard on**, in the system keyboard list.
+   - **Choose it**, from the keyboard chooser. Same pop-up you use to switch
+     back to your usual keyboard later.
+   - **Set the physical layout to English (US)**, optional. This app does the
+     accents itself and never reads the system layout, so leaving yours on US
+     International changes nothing. Plain English (US) just stops the two from
+     looking like they disagree.
+
+That screen is a setup wizard, not a settings screen. There is nothing to
+configure.
 
 ## How the layout is defined
 

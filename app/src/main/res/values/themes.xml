@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.UsIntlIme" parent="@android:style/Theme.DeviceDefault" />
+    <!-- DayNight so the setup screen follows the system theme, which matters on
+         the e-ink devices this targets. -->
+    <style name="Theme.UsIntlIme" parent="@android:style/Theme.DeviceDefault.DayNight" />
 </resources>

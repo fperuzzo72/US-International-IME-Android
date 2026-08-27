@@ -3,6 +3,30 @@
     <string name="app_name">US-International IME</string>
     <string name="ime_name">US-International (physical keyboard)</string>
     <string name="subtype_name">US-International</string>
+
     <string name="input_view_hint">This keyboard is for a physical or Bluetooth keyboard. There is nothing to tap here.</string>
     <string name="input_view_switch">Switch keyboard</string>
+
+    <string name="setup_intro">Three steps, in order. Android splits them across two settings screens and one pop-up, so this walks you through them.</string>
+    <string name="setup_step">%1$d. %2$s</string>
+    <string name="setup_step_done">%1$d. %2$s  ✓</string>
+    <string name="setup_optional">Optional. %1$s</string>
+
+    <string name="setup_1_title">Turn the keyboard on</string>
+    <string name="setup_1_body">Find "US-International (physical keyboard)" in the list and switch it on. Android will warn that a keyboard can read what you type; this one commits characters and stores nothing.</string>
+    <string name="setup_1_button">Open keyboard settings</string>
+
+    <string name="setup_2_title">Choose it</string>
+    <string name="setup_2_body">Pick it from the keyboard chooser. This is the same pop-up you use to switch back to your usual keyboard later.</string>
+    <string name="setup_2_button">Choose keyboard</string>
+
+    <string name="setup_3_title">Set the physical layout to English (US)</string>
+    <string name="setup_3_body">This app does the accents itself and never reads the system layout, so leaving yours on US International changes nothing. Setting it to plain English (US) just stops the two from looking like they disagree.</string>
+    <string name="setup_3_button">Open physical keyboard</string>
+
+    <string name="setup_enable_first">Do step 1 first: the chooser only lists keyboards that are switched on.</string>
+    <string name="setup_no_hard_keyboard_screen">This device has no physical keyboard screen. Opening keyboard settings instead.</string>
+    <string name="setup_screen_missing">This device does not have that settings screen.</string>
+
+    <string name="setup_footer">Once it is chosen, typing works everywhere: \' then a gives á, ~ then n gives ñ, AltGr+e gives é. You can close this screen.</string>
 </resources>
