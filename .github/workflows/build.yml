@@ -40,11 +40,17 @@ jobs:
       - name: Assemble release APK
         run: ./gradlew --no-daemon assembleRelease
 
+      # Renamed here rather than in Gradle: AGP 8 has no supported way to set
+      # the output file name, only APIs marked internal or already deprecated.
+      # A local `./gradlew assembleRelease` still writes app-release.apk.
+      - name: Name the APK
+        run: mv app/build/outputs/apk/release/app-release.apk US-Intl-IME.apk
+
       - name: Upload APK
         uses: actions/upload-artifact@v5
         with:
           name: usintl-ime
-          path: app/build/outputs/apk/release/*.apk
+          path: US-Intl-IME.apk
 
       - name: Upload test report
         if: always()

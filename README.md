@@ -68,6 +68,9 @@ Grab the APK from the latest [build run](../../actions), or build it yourself:
 ./gradlew assembleRelease
 ```
 
+The build run publishes it as `US-Intl-IME.apk`; a local build writes
+`app-release.apk` to `app/build/outputs/apk/release/`.
+
 Then:
 
 1. Install the APK. If an older build is already on the device, **uninstall it
