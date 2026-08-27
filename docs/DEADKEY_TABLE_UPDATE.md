@@ -32,8 +32,8 @@ layout is written out for humans in [LAYOUT_REFERENCE.md](LAYOUT_REFERENCE.md).
 
 The existing firmware table was compared against it entry by entry. The result
 is worth stating plainly: **of the 53 compositions currently in `dead_keys.h`,
-all 53 are correct.** Nothing is wrong. There are three entries missing, and one
-half of the layout that was never implemented.
+all 53 are correct.** Nothing is wrong. There are three entries missing, one
+behavioural difference, and one half of the layout that was never implemented.
 
 ## Change 1: three missing compositions
 
@@ -51,8 +51,9 @@ uppercase `Ÿ` on the diaeresis dead key. That is not an oversight in this
 document, it is what the layout does, and the IME reproduces it. Typing `"` then
 `Y` gives `"Y`, two characters.
 
-The patch is [`microslate-patch/dead_keys.patch`](microslate-patch/dead_keys.patch),
-which applies cleanly to any of the five copies:
+The patch for this change is
+[`microslate-patch/dead_keys.patch`](microslate-patch/dead_keys.patch), which
+applies cleanly to any of the five copies:
 
 ```bash
 git apply --directory=editor/src /path/to/dead_keys.patch
@@ -61,34 +62,56 @@ git apply --directory=editor/src /path/to/dead_keys.patch
 Adjust `--directory` per repo: `editor/src` for MicroWriter, MicroBASIC and
 MicroBASIC-PaperS3, `src` for the other two.
 
-## Two dead keys in a row: no change needed
+## Change 2: two dead keys in a row
 
-An earlier draft of this document proposed a second change here, to
-`deadKeyProcess()`. It has been withdrawn, and the reasoning is worth keeping,
-because the existing code turned out to be right.
+`deadKeyProcess()` handles a non-composable character by emitting the dead key
+as a literal and requeueing the character. That is right for `'` then `q`,
+which gives `'q`. It behaves differently when the requeued character is itself
+a dead key: the requeue path stores it as a new pending accent, so `'` `'` `a`
+comes out as `'á`.
 
-The current implementation handles a non-composable character by emitting the
-dead key as a literal and requeueing the character. When the requeued character
-is itself a dead key, the requeue path stores it as a new pending accent. So
-`'` `'` `a` produces `'á`: one literal apostrophe, then an accented vowel.
+Windows does not do that. **Measured on Windows: `'` `'` `a` gives `''a`.** The
+second dead key does not stack and does not re-arm; both apostrophes come out
+as literals and the state is cleared.
 
-The draft argued this should instead emit both literals and clear the state,
-giving `''a`. That was reasoning, not evidence. `KBDUSX.DLL` stores no
-`dead + dead` entries, so the behaviour is decided by the keyboard driver rather
-than by the layout, and the disassembly cannot show it.
+This one is worth recording as a small case study, because it went back and
+forth twice. `KBDUSX.DLL` stores no `dead + dead` entries, so the behaviour is
+decided by the keyboard driver rather than the layout, and the disassembly
+cannot show it. A first draft assumed `''a` by reasoning. A test on macOS then
+showed `'á`, which matched the firmware's requeue path, so the change was
+withdrawn and the Android IME was brought into line with the firmware. A test
+on Windows afterwards showed `''a` after all.
 
-**Observed on macOS, 2026-08-27: `'` `'` `a` produces `'á`.** The requeue
-behaviour is what a real system does, and it is what the firmware has always
-done.
+So the two platforms genuinely differ here, and the layout this project targets
+is the Windows one. The Android IME is back to `''a`, verified by unit test.
+The firmware, if this change is adopted, would need the same:
 
-One honest caveat: that observation is from macOS, and the layout this project
-targets is the Windows one. The two could in principle differ on this point,
-since it is driver behaviour on both. But there is now evidence on one side and
-nothing on the other, and the evidence agrees with the code that is already
-shipping, so there is no reason left to change it. The Android IME was brought
-into line with the firmware rather than the other way round.
+```c
+        // No composition found: emit the dead key as a literal.
+        static char flush_buf[3];
+        flush_buf[0] = dead;
 
-## Change 2: the AltGr layer
+        // A second dead key does not stack and does not re-arm: on Windows,
+        // '' is two apostrophes and ''a is ''a. Requeuing `ch` here would
+        // store it as a new pending dead key instead, which is what macOS
+        // does and Windows does not.
+        if (deadKeyIsDeadChar(ch)) {
+            flush_buf[1] = ch;
+            flush_buf[2] = '\0';
+            return flush_buf;
+        }
+
+        // Otherwise emit the dead key alone and requeue `ch`.
+        flush_buf[1] = '\0';
+        _dead_requeue_char = ch;
+        return flush_buf;
+```
+
+The lesson worth keeping: everything else in this document came out of the
+layout file and was right the first time. The one item that came out of
+reasoning was wrong twice before a measurement settled it.
+
+## Change 3: the AltGr layer
 
 This is the larger addition, and it is entirely new: the firmware currently has
 no AltGr handling at all. `hidToAscii()` looks at Shift and CapsLock only, so
@@ -167,6 +190,6 @@ ship a subset of the 37 keys.
 | --- | --- | --- | --- |
 | Dead key compositions | 53 | 56 | add ý, Ý, ÿ |
 | Dead key correctness | 53 of 53 correct | | none |
-| Two dead keys in a row | requeues, so `''a` gives `'á` | matches observed behaviour | none |
+| Two dead keys in a row | requeues, so `''a` gives `'á` | `''a` | change `deadKeyProcess()` |
 | AltGr keys | 0 | 37 | add `altgr_keys.h` and the call sites |
 | CapsLock on AltGr | n/a | swaps case pairs only | comes with the table |

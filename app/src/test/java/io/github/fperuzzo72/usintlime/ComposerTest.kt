@@ -81,26 +81,26 @@ class ComposerTest {
     }
 
     @Test
-    fun doubledDeadKeyEmitsOneLiteralAndArmsTheSecond() {
-        // Observed behaviour: ' ' a gives 'a-acute, not ''a. The first
-        // apostrophe resolves to a literal, the second stays armed.
-        assertEquals("'", type(Dead.ACUTE, Dead.ACUTE))
-        assertTrue(composer.hasPending)
-        assertEquals("á", type("a"))
-    }
-
-    @Test
-    fun deadKeysDoNotStackOnEachOther() {
-        assertEquals("'", type(Dead.ACUTE, Dead.TILDE))
-        assertTrue(composer.hasPending)
-        // the tilde is what survived, so it is the tilde that composes
-        assertEquals("ñ", type("n"))
-    }
-
-    @Test
-    fun doubledDeadKeyThenSpaceGivesBothLiterals() {
-        assertEquals("''", type(Dead.ACUTE, Dead.ACUTE, " "))
+    fun doubledDeadKeyGivesTwoLiteralsAndClearsState() {
+        // Measured on Windows: ' ' a gives ''a. macOS gives 'a-acute instead,
+        // and the layout this project targets is the Windows one.
+        assertEquals("''", type(Dead.ACUTE, Dead.ACUTE))
         assertFalse(composer.hasPending)
+        assertEquals("a", type("a"))
+    }
+
+    @Test
+    fun twoDifferentDeadKeysDoNotStack() {
+        assertEquals("'~", type(Dead.ACUTE, Dead.TILDE))
+        assertFalse(composer.hasPending)
+        // nothing is armed, so the next letter is plain
+        assertEquals("n", type("n"))
+    }
+
+    @Test
+    fun apostropheBeforeAPlainLetterNeedsNoSpaceBar() {
+        // `t` takes no acute, so the apostrophe simply comes out in front of it.
+        assertEquals("don't", type("d", "o", "n", Dead.ACUTE, "t"))
     }
 
     @Test

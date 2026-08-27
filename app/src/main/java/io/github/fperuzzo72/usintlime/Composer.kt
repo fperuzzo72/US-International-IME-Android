@@ -14,10 +14,11 @@ package io.github.fperuzzo72.usintlime
  *    if the pair is not in the table, the dead key is emitted as its own literal
  *    followed by that character (`'` then `q` gives `'q`).
  *  - Space is a normal table entry: `'` then space gives `'`.
- *  - A dead key pressed while another one is pending resolves the first one as
- *    a literal and then arms itself, so `''a` gives `'a-acute`: one apostrophe
- *    followed by an accented vowel. Two dead keys do not cancel each other.
- *    See docs/DEADKEY_TABLE_UPDATE.md for the observation behind this.
+ *  - A dead key pressed while another one is pending emits both literals and
+ *    clears the state, so `''` gives two apostrophes and `''a` gives `''a`.
+ *    Measured on Windows. macOS does the opposite here (it gives `'a-acute`),
+ *    which is why the case is documented rather than assumed: see
+ *    docs/DEADKEY_TABLE_UPDATE.md.
  */
 class Composer {
 
@@ -53,12 +54,15 @@ class Composer {
      *         stored and nothing should be inserted yet.
      */
     fun onDead(dead: Dead): String? {
-        // The incoming dead key is stored either way. A pending one ahead of it
-        // simply resolves to its own literal first, the same as it would in
-        // front of any character it cannot compose with.
+        // Two dead keys in a row do not stack and do not re-arm: both come out
+        // as literals and the state is cleared, so the next letter is plain.
         val previous = pending
+        if (previous != null) {
+            pending = null
+            return "" + previous.literal + dead.literal
+        }
         pending = dead
-        return previous?.literal?.toString()
+        return null
     }
 
     /**

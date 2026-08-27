@@ -20,7 +20,8 @@ composition itself and hand the app a finished character. That sidesteps the
 system layout completely instead of waiting for it to be fixed.
 
 This was written for a Bigme HiBreak Pro (Android 14) and an Onyx Boox Mini C
-(Android 11), but there is nothing device-specific in it.
+(Android 11), and is confirmed working on both, but there is nothing
+device-specific in it.
 
 ## What it does and does not do
 
@@ -64,12 +65,15 @@ IMEs and a switch between them, not this app.
 Grab the APK from the latest [build run](../../actions), or build it yourself:
 
 ```bash
-./gradlew assembleDebug
+./gradlew assembleRelease
 ```
 
 Then:
 
-1. Install the APK.
+1. Install the APK. If an older build is already on the device, **uninstall it
+   first**: CI signs each run with a fresh debug key, so a new APK will not
+   install over an older one. Switch to another keyboard before uninstalling,
+   so you are never left without an input method.
 2. Enable **US-International (physical keyboard)** in Android's input method
    settings. The launcher icon takes you straight there.
 3. Select it as the active input method.

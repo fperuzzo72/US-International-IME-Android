@@ -37,14 +37,14 @@ jobs:
       - name: Unit tests
         run: ./gradlew --no-daemon testDebugUnitTest
 
-      - name: Assemble debug APK
-        run: ./gradlew --no-daemon assembleDebug
+      - name: Assemble release APK
+        run: ./gradlew --no-daemon assembleRelease
 
       - name: Upload APK
         uses: actions/upload-artifact@v5
         with:
-          name: usintl-ime-debug
-          path: app/build/outputs/apk/debug/*.apk
+          name: usintl-ime
+          path: app/build/outputs/apk/release/*.apk
 
       - name: Upload test report
         if: always()
