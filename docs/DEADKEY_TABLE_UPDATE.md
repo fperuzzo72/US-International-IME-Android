@@ -10,7 +10,7 @@ byte-identical in all five:
 | --- | --- |
 | `MicroWriter` | `editor/src/dead_keys.h` |
 | `MicroBASIC` | `editor/src/dead_keys.h` |
-| `MicroBASIC-PaperS3` | `editor/src/dead_keys.h` |
+| `MicroWriter-BASIC-PaperS3` | `editor/src/dead_keys.h` |
 | `microslate-firmware-US-International` | `src/dead_keys.h` |
 | `_arquivo-microslate-touch-deadkeys` | `src/dead_keys.h` |
 
@@ -68,7 +68,7 @@ git apply --directory=editor/src /path/to/dead_keys.patch
 ```
 
 Adjust `--directory` per repo: `editor/src` for MicroWriter, MicroBASIC and
-MicroBASIC-PaperS3, `src` for the other two.
+MicroWriter-BASIC-PaperS3, `src` for the other two.
 
 ## Change 2: two dead keys in a row
 
