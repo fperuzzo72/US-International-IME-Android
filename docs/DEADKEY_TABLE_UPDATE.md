@@ -16,10 +16,18 @@ byte-identical in all five:
 
 Everything below applies to all five unchanged.
 
-**Status: applied to all five on 2026-08-27**, along with the AltGr wiring at
-every call site (eleven of them across the five). None of it has been compiled
-as firmware or tested on hardware yet. See each project's
-`docs/DEVELOPMENT_LOG.md` for what landed where.
+**Status: not adopted, on purpose.** All three changes were applied to all five
+projects on 2026-08-27 and then rolled back the same day. What stays in each
+project is the generated `altgr_keys.h`, sitting next to `dead_keys.h` with
+nothing calling it: no include, no call, no code changed for it.
+
+The reason is use, not doubt. There is no AltGr keyboard in play with that
+firmware, and the virtual keyboard has no such key, so the layer would be
+wiring with nothing on the other end of it. Each project's
+`docs/DEVELOPMENT_LOG.md` carries that decision and points back here.
+
+This document is therefore the adoption path rather than a record of what
+happened. It is written to still be correct on the day someone picks it up.
 
 ## Where the reference came from
 
