@@ -1,5 +1,5 @@
---- a/dead_keys.h	2026-08-27 11:10:04
-+++ b/dead_keys.h	2026-08-27 11:10:04
+--- a/dead_keys.h	2026-08-27 11:38:21
++++ b/dead_keys.h	2026-08-27 11:38:21
 @@ -4,11 +4,11 @@
  // dead_keys.h — US-International dead key composition for MicroSlate
  //
@@ -27,31 +27,8 @@
      { '"',  'O', "\xC3\x96" },  // Ö
      { '"',  'u', "\xC3\xBC" },  // ü
      { '"',  'U', "\xC3\x9C" },  // Ü
-+    { '"',  'y', "\xC3\xBF" },  // ÿ  (no uppercase: the Windows layout
++    { '"',  'y', "\xC3\xBF" },  // ÿ  (lowercase only: the Windows layout
 +                                //  has no Ÿ on this dead key)
      { '"',  ' ', "\""        },  // literal double-quote
  
      { 0, 0, 0 }  // sentinel
-@@ -166,9 +170,20 @@
-             }
-         }
- 
--        // No composition found: emit dead key as literal, requeue `ch`
--        static char flush_buf[2];
-+        // No composition found: emit the dead key as a literal.
-+        static char flush_buf[3];
-         flush_buf[0] = dead;
-+
-+        // A second dead key does not stack and does not re-arm: on Windows,
-+        // '' is two apostrophes and ''a is ''a, not 'a-acute. Requeuing `ch`
-+        // here would store it as a new pending dead key instead.
-+        if (deadKeyIsDeadChar(ch)) {
-+            flush_buf[1] = ch;
-+            flush_buf[2] = '\0';
-+            return flush_buf;
-+        }
-+
-+        // Otherwise emit the dead key alone and requeue `ch`.
-         flush_buf[1] = '\0';
-         _dead_requeue_char = ch;
-         return flush_buf;

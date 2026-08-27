@@ -1,16 +1,20 @@
 # Updating the firmware table to the full US-International layout
 
-This is the hand-off document for the projects that already ship the minimal
-dead key table, so they can be brought up to the same fidelity as this IME.
+This is the hand-off document for the projects that already ship the dead key
+table, so they can be brought up to the same fidelity as this IME.
 
-Three repositories carry the table, and as of this writing the file is
-byte-identical in all three:
+Five repositories carry the table, and as of this writing the file is
+byte-identical in all five:
 
-- `MicroWriter/editor/src/dead_keys.h`
-- `microslate-firmware-US-International/src/dead_keys.h`
-- `_arquivo-microslate-touch-deadkeys/src/dead_keys.h`
+| Repository | Path |
+| --- | --- |
+| `MicroWriter` | `editor/src/dead_keys.h` |
+| `MicroBASIC` | `editor/src/dead_keys.h` |
+| `MicroBASIC-PaperS3` | `editor/src/dead_keys.h` |
+| `microslate-firmware-US-International` | `src/dead_keys.h` |
+| `_arquivo-microslate-touch-deadkeys` | `src/dead_keys.h` |
 
-Everything below applies to all three unchanged.
+Everything below applies to all five unchanged.
 
 ## Where the reference came from
 
@@ -23,8 +27,8 @@ layout is written out for humans in [LAYOUT_REFERENCE.md](LAYOUT_REFERENCE.md).
 
 The existing firmware table was compared against it entry by entry. The result
 is worth stating plainly: **of the 53 compositions currently in `dead_keys.h`,
-all 53 are correct.** Nothing is wrong. There are three entries missing, one
-behavioural difference, and one half of the layout that was never implemented.
+all 53 are correct.** Nothing is wrong. There are three entries missing, and one
+half of the layout that was never implemented.
 
 ## Change 1: three missing compositions
 
@@ -42,51 +46,44 @@ uppercase `Ÿ` on the diaeresis dead key. That is not an oversight in this
 document, it is what the layout does, and the IME reproduces it. Typing `"` then
 `Y` gives `"Y`, two characters.
 
-## Change 2: two dead keys in a row
-
-The current `deadKeyProcess()` handles a non-composable character by emitting
-the dead key as a literal and requeueing the character. That is right for
-`'` then `q`, which gives `'q`. It goes wrong when the requeued character is
-itself a dead key: the requeue path stores it as a new pending accent, so
-`''` leaves an accent armed and `''a` comes out as `'á`.
-
-On Windows a second dead key does not stack and does not re-arm. `''` is two
-apostrophes, `''a` is `''a`, and `'~` is `'~`. This is how people type an
-apostrophe without reaching for the space bar, so it matters in practice.
-
-The fix is local to `deadKeyProcess()`: when no composition is found and the
-incoming character is itself a dead key, emit both literals and clear the state
-instead of requeueing.
-
-Both this change and Change 1 are in
-[`microslate-patch/dead_keys.patch`](microslate-patch/dead_keys.patch), which
-applies cleanly to any of the three copies:
+The patch is [`microslate-patch/dead_keys.patch`](microslate-patch/dead_keys.patch),
+which applies cleanly to any of the five copies:
 
 ```bash
 git apply --directory=editor/src /path/to/dead_keys.patch
 ```
 
-Adjust `--directory` per repo: `editor/src` for MicroWriter, `src` for the
-other two.
+Adjust `--directory` per repo: `editor/src` for MicroWriter, MicroBASIC and
+MicroBASIC-PaperS3, `src` for the other two.
 
-### One thing to verify on a real Windows machine
+## Two dead keys in a row: no change needed
 
-The `''` behaviour above is the one item in this document that came from
-reasoning about the layout rather than from the layout file itself. Windows
-stores no `dead + dead` entries in `KBDUSX.DLL`, so what happens there is
-decided by the Windows keyboard driver, not by the layout, and the disassembly
-cannot show it. Documentation for the layout says only that "hitting the
-spacebar or a non-accented letter after a dead key produces the key's normal
-value", which does not settle whether the second dead key is consumed or
-re-armed.
+An earlier draft of this document proposed a second change here, to
+`deadKeyProcess()`. It has been withdrawn, and the reasoning is worth keeping,
+because the existing code turned out to be right.
 
-If a Windows box is ever handy, the deciding test is three keystrokes: `'` `'`
-`a`. If it produces `''a`, this implementation is right. If it produces `'á`,
-then the original requeue behaviour was right all along and both this IME and
-the patch should be reverted on that one point. Everything else here is taken
-directly from the layout data.
+The current implementation handles a non-composable character by emitting the
+dead key as a literal and requeueing the character. When the requeued character
+is itself a dead key, the requeue path stores it as a new pending accent. So
+`'` `'` `a` produces `'á`: one literal apostrophe, then an accented vowel.
 
-## Change 3: the AltGr layer
+The draft argued this should instead emit both literals and clear the state,
+giving `''a`. That was reasoning, not evidence. `KBDUSX.DLL` stores no
+`dead + dead` entries, so the behaviour is decided by the keyboard driver rather
+than by the layout, and the disassembly cannot show it.
+
+**Observed on macOS, 2026-08-27: `'` `'` `a` produces `'á`.** The requeue
+behaviour is what a real system does, and it is what the firmware has always
+done.
+
+One honest caveat: that observation is from macOS, and the layout this project
+targets is the Windows one. The two could in principle differ on this point,
+since it is driver behaviour on both. But there is now evidence on one side and
+nothing on the other, and the evidence agrees with the code that is already
+shipping, so there is no reason left to change it. The Android IME was brought
+into line with the firmware rather than the other way round.
+
+## Change 2: the AltGr layer
 
 This is the larger addition, and it is entirely new: the firmware currently has
 no AltGr handling at all. `hidToAscii()` looks at Shift and CapsLock only, so
@@ -109,10 +106,9 @@ it next to `dead_keys.h`.
 
 `hidToAscii()` returns a `char`, and every AltGr character is multi-byte UTF-8,
 so AltGr cannot go through it. It has to branch earlier, on the same path the
-dead key engine already uses. There are two call sites, both in
-`input_handler.cpp`: the editor at `handleEditorKey()` and the title editor at
-`handleTitleEditKey()`. Both already know how to insert a UTF-8 string, because
-`deadKeyProcess()` hands them one.
+dead key engine already uses. Every site that calls `deadKeyProcess()` is a site
+that needs this branch, and they already know how to insert a UTF-8 string,
+because `deadKeyProcess()` hands them one.
 
 At each site, before the existing `char c = hidToAscii(keyCode, modifiers);`
 line:
@@ -150,13 +146,13 @@ about them:
 
 ### Scope note
 
-The firmware is a writing tool with a fixed font, so there is one thing to check
-before shipping the AltGr layer: whether `EpdFont` actually has glyphs for the
-symbols. The accented Latin letters are almost certainly there already, since
-the dead keys produce them. Characters like ¤ ¶ ‘ ’ þ ð æ ø may not be. A
-missing glyph is a rendering problem, not a table problem, and the table can
-ship whole while the font catches up. Worth a look at the glyph coverage before
-deciding whether to expose all 37 keys or start with the letters.
+These are writing tools with a fixed font, so there is one thing to check before
+shipping the AltGr layer: whether `EpdFont` actually has glyphs for the symbols.
+The accented Latin letters are almost certainly there already, since the dead
+keys produce them. Characters like ¤ ¶ ‘ ’ þ ð æ ø may not be. A missing glyph
+is a rendering problem, not a table problem, and the table can ship whole while
+the font catches up. Worth a look at the glyph coverage before deciding whether
+to expose all 37 keys or start with the letters.
 
 ## Summary
 
@@ -164,6 +160,6 @@ deciding whether to expose all 37 keys or start with the letters.
 | --- | --- | --- | --- |
 | Dead key compositions | 53 | 56 | add ý, Ý, ÿ |
 | Dead key correctness | 53 of 53 correct | | none |
-| Two dead keys in a row | re-arms the second | emits both literals | change, verify on Windows |
-| AltGr keys | 0 | 37 | add `altgr_keys.h` and two call sites |
+| Two dead keys in a row | requeues, so `''a` gives `'á` | matches observed behaviour | none |
+| AltGr keys | 0 | 37 | add `altgr_keys.h` and the call sites |
 | CapsLock on AltGr | n/a | swaps case pairs only | comes with the table |

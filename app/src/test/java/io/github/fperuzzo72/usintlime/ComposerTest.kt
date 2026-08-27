@@ -81,16 +81,25 @@ class ComposerTest {
     }
 
     @Test
-    fun doubledDeadKeyGivesTwoLiteralsAndClearsState() {
-        assertEquals("''", type(Dead.ACUTE, Dead.ACUTE))
-        assertFalse(composer.hasPending)
-        // and the next letter is not accented
-        assertEquals("a", type("a"))
+    fun doubledDeadKeyEmitsOneLiteralAndArmsTheSecond() {
+        // Observed behaviour: ' ' a gives 'a-acute, not ''a. The first
+        // apostrophe resolves to a literal, the second stays armed.
+        assertEquals("'", type(Dead.ACUTE, Dead.ACUTE))
+        assertTrue(composer.hasPending)
+        assertEquals("á", type("a"))
     }
 
     @Test
-    fun twoDifferentDeadKeysDoNotStack() {
-        assertEquals("'~", type(Dead.ACUTE, Dead.TILDE))
+    fun deadKeysDoNotStackOnEachOther() {
+        assertEquals("'", type(Dead.ACUTE, Dead.TILDE))
+        assertTrue(composer.hasPending)
+        // the tilde is what survived, so it is the tilde that composes
+        assertEquals("ñ", type("n"))
+    }
+
+    @Test
+    fun doubledDeadKeyThenSpaceGivesBothLiterals() {
+        assertEquals("''", type(Dead.ACUTE, Dead.ACUTE, " "))
         assertFalse(composer.hasPending)
     }
 
